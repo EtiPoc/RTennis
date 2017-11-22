@@ -1,0 +1,57 @@
+
+
+```{r}
+install.packages("BradleyTerry2")
+library(BradleyTerry2)
+```
+
+Exemple from documentation
+
+```{r}
+data("citations", package = "BradleyTerry2")
+citations
+citations.sf <- countsToBinomial(citations)
+citations.sf
+names(citations.sf)[1:2] <- c("journal1", "journal2")
+citeModel = BTm(cbind(win1, win2), journal1, journal2, ~ journal, id = "journal", data = citations.sf)
+citeModel
+
+```
+
+
+Let's calculate the ML estimator by ourselves
+```{r}
+
+A=matrix(c(0,730,498,221,33,0,68,17,320,813,0,142,284,276,325,0),nrow = 4,ncol = 4,byrow = T)
+
+#en input, donner la matric M où M[i,j] est le nombre de fois où i bat j
+#en sortie on obtien le vecteur des scores
+bradleyt = function(M){
+  assertthat::are_equal(dim(M)[1],dim(M)[2])
+  d=dim(M)[1]
+  #we set the first score as 0
+  scores= c(1,rep(1,d-1))
+  for(p in 1:100000){
+    old_scores=scores
+    for(i in 2:d){
+      yi=sum(M[i,])-M[i,i]
+      fact=0
+      for (j in 1:d){
+        if(j!=i){
+          fact=fact+((M[i,j]+M[j,i])/(old_scores[i]+old_scores[j]))
+        }
+      }
+      fact=1/fact
+      scores[i]=yi*fact
+    }
+    
+  }
+  return(log(scores))
+  
+  }
+
+bradleyt(A)
+
+```
+
+
