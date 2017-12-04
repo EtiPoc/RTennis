@@ -26,13 +26,11 @@ d2013=read.csv("2013.csv")
 dall<-list(d2009, d2010, d2011, d2012, d2013)
 donnees<-rbindlist(dall, fill=TRUE)
 donnees<-as.data.frame(donnees)
-alpha<-as.numeric(1)
 ```
 
 
 ```{r}
-X <- split(donnees,donnees$Surface)
-a<-X$Clay
+
 
 level_date<-function(df){
   df$Date<-2013-year(as.Date(df$Date, format = "%d/%m/%Y"))
@@ -52,77 +50,43 @@ prepare_df<-function(df){
   return(df)
 }
 
-a<-level_date((a))
-a<-aggregate_games(a)
-
-
-joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
-n<- length(joueurs)
-results <- data.frame(matrix(ncol = n, nrow = n))
-
-colnames(results)<-joueurs
-rownames(results)<-joueurs
-results<-replace(results, is.na(results), 0)
-b<-as.character(a$Winner[1])
-
-fill_results<- function(line,results){
+fill_results<- function(line,results, alpha){
   w<-(as.numeric(line['W']) * exp(-(alpha*as.numeric(line['Date']))))
   l<-(as.numeric(line['L']) * exp(-(alpha*as.numeric(line['Date']))))
   
   results[as.character(line['Winner']),as.character(line['Loser'])] <<- as.numeric(results[as.character(line['Winner']),as.character(line['Loser'])]) + w
   
   results[as.character(line['Loser']),as.character(line['Winner'])] <<- as.numeric(results[as.character(line['Loser']),as.character(line['Winner'])]) + l
-  
 }
 
-apply(a,1,function(x) fill_results(x,results))
-
-results
-
-
-prepare_df(X$Clay)
-
-process_surface<-function(df){
-  a<-prepare_df(df)
+process_surface<-function(df,alpha){
+  a<-df
+  a<-level_date((a))
+  a<-aggregate_games(a)
   joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
   n<- length(joueurs)
-  results <- data.frame(matrix(ncol = n, nrow = n))
-  colnames(results)<-joueurs
-  rownames(results)<-joueurs
-  results<-replace(results, is.na(results), 0)
-  apply(a,1,function(x) fill_results(x,results))
-  results
+  results <<- data.frame(matrix(ncol = n, nrow = n))
+  colnames(results)<<-joueurs
+  rownames(results)<<-joueurs
+  results<<-replace(results, is.na(results), 0)
+  apply(a,1,function(x) fill_results(x,results,alpha))
   return(results)
 }
-c<-process_surface(a)
-d<-process_surface(X$Clay)
-c
-d
-apply(c,1,function(x) fill_results(x,d))
-c
-d
+
+process_data<-function(df, alpha){
+  X <- split(df,df$Surface)
+  Y<-lapply(X,function(x) process_surface(x,alpha))
+  return(Y)
+}
 ```
-
-
-
-
-
 
 ```{r}
-#Preprocessing of data
-#All players
-a<-X$Hard
-a<-level_date((a))
-a<-aggregate_games(a)
-joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
-n<- length(joueurs)
-results <- data.frame(matrix(ncol = n, nrow = n))
-colnames(results)<-joueurs
-rownames(results)<-joueurs
-results<-replace(results, is.na(results), 0)
-
-apply(a,1,function(x) fill_results(x,results))
-results
+alpha<-0.05
+z<-process_data(donnees,alpha)
+z$Grass
+z$Clay
 ```
+
+
 
 
