@@ -1,0 +1,128 @@
+---
+title: "Preprocess"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages('BradleyTerry2')
+install.packages("stringr", dependencies=TRUE)
+
+
+
+```
+
+## R Markdown
+
+
+```{r cars}
+library(stringr)
+library(data.table)
+d2009=read.csv("2009.csv")
+d2010=read.csv("2010.csv")
+d2011=read.csv("2011.csv")
+d2012=read.csv("2012.csv")
+d2013=read.csv("2013.csv")
+dall<-list(d2009, d2010, d2011, d2012, d2013)
+donnees<-rbindlist(dall, fill=TRUE)
+donnees<-as.data.frame(donnees)
+alpha<-as.numeric(1)
+```
+
+
+```{r}
+X <- split(donnees,donnees$Surface)
+a<-X$Clay
+
+level_date<-function(df){
+  df$Date<-2013-year(as.Date(df$Date, format = "%d/%m/%Y"))
+  return (df)
+}
+
+aggregate_games<-function(df){
+  df<-replace(df, is.na(df), 0)
+  df$W<-df$W1+df$W2+df$W3+df$W4+df$W5
+  df$L<-df$L1+df$L2+df$L3+df$L4+df$L5
+  return (df)
+}
+
+prepare_df<-function(df){
+  df<-level_date((df))
+  df<-aggregate_games(df)
+  return(df)
+}
+
+a<-level_date((a))
+a<-aggregate_games(a)
+
+
+joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
+n<- length(joueurs)
+results <- data.frame(matrix(ncol = n, nrow = n))
+
+colnames(results)<-joueurs
+rownames(results)<-joueurs
+results<-replace(results, is.na(results), 0)
+b<-as.character(a$Winner[1])
+
+fill_results<- function(line,results){
+  w<-(as.numeric(line['W']) * exp(-(alpha*as.numeric(line['Date']))))
+  l<-(as.numeric(line['L']) * exp(-(alpha*as.numeric(line['Date']))))
+  
+  results[as.character(line['Winner']),as.character(line['Loser'])] <<- as.numeric(results[as.character(line['Winner']),as.character(line['Loser'])]) + w
+  
+  results[as.character(line['Loser']),as.character(line['Winner'])] <<- as.numeric(results[as.character(line['Loser']),as.character(line['Winner'])]) + l
+  
+}
+
+apply(a,1,function(x) fill_results(x,results))
+
+results
+
+
+prepare_df(X$Clay)
+
+process_surface<-function(df){
+  a<-prepare_df(df)
+  joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
+  n<- length(joueurs)
+  results <- data.frame(matrix(ncol = n, nrow = n))
+  colnames(results)<-joueurs
+  rownames(results)<-joueurs
+  results<-replace(results, is.na(results), 0)
+  apply(a,1,function(x) fill_results(x,results))
+  results
+  return(results)
+}
+c<-process_surface(a)
+d<-process_surface(X$Clay)
+c
+d
+apply(c,1,function(x) fill_results(x,d))
+c
+d
+```
+
+
+
+
+
+
+```{r}
+#Preprocessing of data
+#All players
+a<-X$Hard
+a<-level_date((a))
+a<-aggregate_games(a)
+joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
+n<- length(joueurs)
+results <- data.frame(matrix(ncol = n, nrow = n))
+colnames(results)<-joueurs
+rownames(results)<-joueurs
+results<-replace(results, is.na(results), 0)
+
+apply(a,1,function(x) fill_results(x,results))
+results
+```
+
+
