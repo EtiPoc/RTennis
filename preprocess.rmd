@@ -30,7 +30,8 @@ donnees<-as.data.frame(donnees)
 
 
 ```{r}
-
+joueurs=union(levels(factor(donnees$Winner)), levels(factor(donnees$Loser)))
+n<- length(joueurs)
 
 level_date<-function(df){
   df$Date<-2013-year(as.Date(df$Date, format = "%d/%m/%Y"))
@@ -63,8 +64,7 @@ process_surface<-function(df,alpha){
   a<-df
   a<-level_date((a))
   a<-aggregate_games(a)
-  joueurs=union(levels(factor(a$Winner)), levels(factor(a$Loser)))
-  n<- length(joueurs)
+  
   results <<- data.frame(matrix(ncol = n, nrow = n))
   colnames(results)<<-joueurs
   rownames(results)<<-joueurs
@@ -78,13 +78,53 @@ process_data<-function(df, alpha){
   Y<-lapply(X,function(x) process_surface(x,alpha))
   return(Y)
 }
+
+simple_merge<-function(df){
+  y<-Reduce(`+`,df)
+  return (y)
+}
+
+composed_merge<-function(df,beta){
+  y<-simple_merge(df)
+  v<-lapply(df,function(x) beta*y+(1-beta)*x)
+  return (v)
+}
+```
+
+```{r}
+#process the matrix for each surface, with everygame pondered with exp(-alpha*t) (t=nombre d'années séparant de l'année actuelle)
+alpha<-0.05
+z<-process_data(donnees,alpha)
+
+z$Grass
+z$Clay
+z$Hard
+z$Carpet
+
+#simple sum of the results for every surface
+y<-simple_merge(z)
+
+#matrixes for every surface with the score being 1*main surface score + Beta * (sum of other surfaces score)
+beta<-0.1
+w<-composed_merge(z,beta)
+
 ```
 
 ```{r}
 alpha<-0.05
 z<-process_data(donnees,alpha)
+
 z$Grass
 z$Clay
+z$Hard
+z$Carpet
+sum(z)
+Reduce(`+`,z)
+y<-simple_merge(z)
+z
+y
+w<-composed_merge(z,0)
+w
 ```
 
 

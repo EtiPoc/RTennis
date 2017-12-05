@@ -52,12 +52,6 @@ test<- function(k){
 sapply(gagnants,function (x) fill_victories(x))
 results<-replace(results, is.na(results), 0)
 
-test(1)
-test(6)
-victories[gagnants[5]]
-which(!is.na(results[50]))
-sum(results[1,])
-
 a<-countsToBinomial(results)
 a
 ```
