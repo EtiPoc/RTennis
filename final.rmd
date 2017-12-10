@@ -58,17 +58,24 @@ prepare_df<-function(df){
 }
 
 #on récupère le nombre de jeu gagnés par chaque joueur de la ligne et on les rajoute à la matrice des résultats, coefficienté par la décroissance exponentielle
-fill_results<- function(line,results, alpha){
+#si extension=0, on enleve la décroissance exponentielle et on compte par match (et non plus par jeu)
+fill_results<- function(line,results, alpha,extension=1){
   w<-(as.numeric(line['W']) * exp(-(alpha*as.numeric(line['Date']))))
   l<-(as.numeric(line['L']) * exp(-(alpha*as.numeric(line['Date']))))
+  
+  if(extension==0){
+    w<-1
+    l<-0
+  }
   
   results[as.character(line['Winner']),as.character(line['Loser'])] <<- as.numeric(results[as.character(line['Winner']),as.character(line['Loser'])]) + w
   
   results[as.character(line['Loser']),as.character(line['Winner'])] <<- as.numeric(results[as.character(line['Loser']),as.character(line['Winner'])]) + l
 }
 
+
 #on prepre le dataframe puis on crée la matrice des résultats que l'on remplie grace au apply
-process_surface<-function(df,alpha){
+process_surface<-function(df,alpha,extension=1){
   a<-df
   a<-level_date((a))
   a<-aggregate_games(a)
@@ -78,14 +85,14 @@ process_surface<-function(df,alpha){
   rownames(results)<<-joueurs
   results<<-replace(results, is.na(results), 0)
   
-  apply(a,1,function(x) fill_results(x,results,alpha))
+  apply(a,1,function(x) fill_results(x,results,alpha,extension))
   return(results)
 }
 
 #on sépare les matchs selon la surface de jeu et on calcule la matrice des résultats pour chacune des surfaces
-process_data<-function(df, alpha){
+process_data<-function(df, alpha, extension=1){
   X <- split(df,df$Surface)
-  Y<-lapply(X,function(x) process_surface(x,alpha))
+  Y<-lapply(X,function(x) process_surface(x,alpha,extension))
   return(Y)
 }
 
@@ -135,8 +142,8 @@ bradleyt = function(M){
 
 ```{r}
 #process the matrix for each surface, with everygame pondered with exp(-alpha*t) (t=nombre d'ann?es s?parant de l'ann?e actuelle)
-alpha<-10
-z<-process_data(donnees,alpha)
+alpha<-0.01
+z<-process_data(donnees,alpha,extension=1)
 
 #simple sum of the results for every surface
 y<-simple_merge(z)
@@ -228,3 +235,4 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
