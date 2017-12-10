@@ -1,24 +1,22 @@
 ---
-title: "main2"
+title: "Rapport final - Projet Bradley Terry"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r cars}
 install.packages('BradleyTerry2')
 install.packages("stringr", dependencies=TRUE)
 library(BradleyTerry2)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
 library(stringr)
 library(data.table)
+
+#lecture des données
 d2009=read.csv("2009.csv")
 d2010=read.csv("2010.csv")
 d2011=read.csv("2011.csv")
@@ -140,22 +138,18 @@ bradleyt = function(M){
 alpha<-10
 z<-process_data(donnees,alpha)
 
-z$Grass
-z$Clay
-z$Hard
-z$Carpet
-
 #simple sum of the results for every surface
 y<-simple_merge(z)
 ym=as.matrix(y)
 dim(ym)
-#matrixes for every surface with the score being 1*main surface score + Beta * (sum of other surfaces score)
+
+#matrixes for every surface with the score being 1*main surface score + Beta * (sum of other surfaces score). For example see w$Clay, w$Grass, w$Hard or w$Carpet
 beta<-0.1
 w<-composed_merge(z,beta)
 
 scores=bradleyt(ym)
-scores
-order(scores)
+
+#on  obtient le classement croissant des jouers par:
 colnames(ym)[order(scores)]
 
 # attribution of a score to each player
@@ -224,22 +218,6 @@ plot(x=seq(0,1,length=50), y=fx)
 
 ```
 
-```{r}
-alpha<-0.05
-z<-process_data(donnees,alpha)
-
-z$Grass
-z$Clay
-z$Hard
-z$Carpet
-sum(z)
-Reduce(`+`,z)
-y<-simple_merge(z)
-z
-y
-w<-composed_merge(z,0)
-w
-```
 
 ## Including Plots
 
